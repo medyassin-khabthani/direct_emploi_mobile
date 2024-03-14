@@ -18,8 +18,7 @@ class FullWidthElevatedButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius:
             BorderRadius.circular(10.0), // Adjust as needed
-          ),
-          primary: appColor, // Set background color to blue
+          ), backgroundColor: appColor, // Set background color to blue
           minimumSize: const Size(double.infinity, 50), // Set minimum height
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:direct_emploi/helper/style.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:cupertino_icons/cupertino_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -23,7 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
 
       appBar:  AppBar(
-        toolbarHeight: 300,
+        toolbarHeight: 350,
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         flexibleSpace: ClipPath(
@@ -59,17 +61,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         progressColor: appColor,
                         circularStrokeCap: CircularStrokeCap.round,
                       ),
-                      Text("text"),
+                      CircularIconButton(
+                        onPressed: () {
+                          print('Circular icon button pressed!');
+                        },
+                        iconPath: Icons.settings, iconColor: strokeColor, // Replace with your icon path
+                      ),
                     ],
                   ),
                   SizedBox(height: 15,),
-                  Text("Mon profil",style: TextStyle(
+                  const Text("Mon profil",style: TextStyle(
                     fontSize: 18.0,
                     fontFamily: "semi-bold"
                   ),),
+                  SizedBox(height: 15,),
                   Row(
-
-                    children: [],
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularIconButton(
+                        onPressed: () {
+                          print('Circular icon button pressed!');
+                        },
+                        iconPath: CupertinoIcons.paperclip, iconColor: appColor, // Replace with your icon path
+                      ),
+                      CircularIconButton(
+                        onPressed: () {
+                            print('Circular icon button pressed!');
+                        },
+                        iconPath: CupertinoIcons.heart, iconColor: appColor, // Replace with your icon path
+                      ),
+                    ],
                   )
                 ],
               ),

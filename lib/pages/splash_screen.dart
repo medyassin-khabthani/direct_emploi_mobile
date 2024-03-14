@@ -118,11 +118,10 @@ class _SplashScreenState extends State<SplashScreen>
 
                             },
                             style: ElevatedButton.styleFrom(
-                              padding:EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0) ,
+                              padding:EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0), backgroundColor: Colors.white ,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0), // Adjust as needed
-                              ),
-                              primary: Colors.white, // Background color
+                              ), // Background color
                             ),
                             child: const Text(
                               "Commencer",
