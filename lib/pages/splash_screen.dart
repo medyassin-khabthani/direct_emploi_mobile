@@ -2,50 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'login_screen.dart';
 import 'onboard_screen.dart';
-
-
 
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 3),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _controller.forward();
-
-    // After 3 seconds, navigate to the main screen
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, "Login");
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,90 +22,103 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(25.0),
+          padding: const EdgeInsets.all(15.0),
           child: Center(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Spacer(),
-                      Spacer(),
-                      Image.asset(
-                        'assets/images/white_logo.png', // Replace with your SVG logo asset path
-                        width: 150,
-                        color: Colors.white,
-                      ),
-                      SizedBox(height: 20.0),
-                      const Text("Trouver votre emploi",
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: Colors.white,
-                        fontFamily:'regular',
-                      ),),
-                      const Text("parmi nos 126 831 offres",
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          color: Colors.white,
-                          fontFamily:'semi-bold',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Spacer(),
+                Spacer(),
+                Image.asset(
+                  'assets/images/white_logo.png', // Replace with your SVG logo asset path
+                  width: 180,
+                  color: Colors.white,
+                ),
+                SizedBox(height: 20.0),
+                const Text(
+                  "Trouver votre emploi",
+                  style: TextStyle(
+                    fontSize: 22.0,
+                    color: Colors.white,
+                    fontFamily: 'regular',
+                  ),
+                ),
+                const Text(
+                  "parmi nos 126 831 offres",
+                  style: TextStyle(
+                    fontSize: 22.0,
+                    color: Colors.white,
+                    fontFamily: 'semi-bold',
+                  ),
+                ),
+                Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen()));
+                        },
+                        child: Text(
+                          "Me connecter",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.0,
+                              fontFamily: "regular"),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.white),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20.0, vertical: 15.0),
                         ),
                       ),
-                      Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () {
-                              // Your button action here
-                            },
-                            child: Text(
-                              "Me connecter",
-                              style: TextStyle(color: Colors.white,fontSize: 10.0,fontFamily: "regular"),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.white),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
-                            ),
-                          ),
-                          SizedBox(width: 15.0,),
-                          ElevatedButton(
-
-                            onPressed: () {
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (context) => const OnBoardScreen()));
-
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding:EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0), backgroundColor: Colors.white ,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0), // Adjust as needed
-                              ), // Background color
-                            ),
-                            child: const Text(
-                              "Commencer",
-                              style: TextStyle(color: Colors.black,fontSize: 10.0,fontFamily: "regular"),
-                            ),
-
-                          ),
-                        ],
+                    ),
+                    SizedBox(
+                      width: 15.0,
+                    ),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => OnBoardScreen()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20.0, vertical: 15.0),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(20.0), // Adjust as needed
+                          ), // Background color
+                        ),
+                        child: const Text(
+                          "Commencer",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 12.0,
+                              fontFamily: "regular"),
+                        ),
                       ),
-                      Spacer()
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 60,
+                )
+              ],
             ),
           ),
         ),
       ),
-
     );
   }
 }

@@ -9,6 +9,8 @@ const strokeColor = Color(0x66000000);
 const tenPercentBlack = Color(0x1A000000);
 const inputBackground = Color(0xFFF9F9F9);
 const placeholderColor=Color(0x66000000);
+const drawerBackground=Color(0xFFF0F4F7);
+const headerBackground=Color(0xFFF2F2F2);
 
 
 headText() {

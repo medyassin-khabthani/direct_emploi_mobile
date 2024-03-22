@@ -1,5 +1,6 @@
 import 'package:direct_emploi/pages/tabbar_screen.dart';
 import 'package:direct_emploi/pages/splash_screen.dart';
+import 'package:direct_emploi/pages/test_file.dart';
 import 'package:flutter/material.dart';
 
 import 'helper/style.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
 
           inputDecorationTheme: const InputDecorationTheme(
             border: OutlineInputBorder(
-                borderSide: BorderSide(color:strokeColor)
+                borderSide: BorderSide(color:tenPercentBlack)
             ),
             // Define FloatingLabelStyle for color change on focus
             floatingLabelStyle: TextStyle(
