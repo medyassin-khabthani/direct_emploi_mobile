@@ -1,46 +1,48 @@
-import 'package:direct_emploi/helper/style.dart';
 import 'package:flutter/material.dart';
+import 'package:direct_emploi/helper/style.dart';
 
 class SingleSelectChip extends StatefulWidget {
-  final List<String> itemList;
+  final Map<String, String> options;
+  final String? initialSelectedKey;
   final Function(String)? onSelectionChanged;
 
-  const SingleSelectChip(this.itemList, {super.key, this.onSelectionChanged});
+  const SingleSelectChip(this.options, {super.key, this.initialSelectedKey, this.onSelectionChanged});
 
   @override
   _SingleSelectChipState createState() => _SingleSelectChipState();
 }
 
 class _SingleSelectChipState extends State<SingleSelectChip> {
-  String selectedItem = "";
+  late String selectedKey;
 
-  _buildChoiceList() {
+  @override
+  void initState() {
+    super.initState();
+    selectedKey = widget.initialSelectedKey ?? "";
+  }
+
+  List<Widget> _buildChoiceList() {
     List<Widget> choices = [];
 
-    widget.itemList.forEach((item) {
-      choices.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5.0),
-        child: ChoiceChip(
-          selectedColor: appColor,
-
-          side: BorderSide(
-
-            color: selectedItem == item ? Colors.transparent : Colors.grey,
-          ),
-          label: Text(item,),
-          labelStyle: TextStyle(
-            color: selectedItem == item ? Colors.white : placeholderColor, // Change text color
-          ),
-          selected: selectedItem == item,
-          checkmarkColor: Colors.white,
-          onSelected: (selected) {
-            setState(() {
-              selectedItem = selected ? item : "";
-
-              widget.onSelectionChanged?.call(selectedItem);
-            });
-          },
+    widget.options.forEach((key, value) {
+      choices.add(ChoiceChip(
+        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+        selectedColor: appColor,
+        side: BorderSide(
+          color: selectedKey == key ? Colors.transparent : Colors.grey,
         ),
+        label: Text(value),
+        labelStyle: TextStyle(
+          color: selectedKey == key ? Colors.white : placeholderColor, // Change text color
+        ),
+        selected: selectedKey == key,
+        checkmarkColor: Colors.white,
+        onSelected: (selected) {
+          setState(() {
+            selectedKey = selected ? key : "";
+            widget.onSelectionChanged?.call(selectedKey);
+          });
+        },
       ));
     });
 
@@ -50,6 +52,8 @@ class _SingleSelectChipState extends State<SingleSelectChip> {
   @override
   Widget build(BuildContext context) {
     return Wrap(
+      runSpacing: 10,
+      spacing: 20,
       children: _buildChoiceList(),
     );
   }

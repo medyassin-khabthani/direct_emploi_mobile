@@ -6,7 +6,9 @@ class DETextField extends StatelessWidget {
   final IconData? prefixIcon;
   final IconButton? suffixIcon;
   final String labelText;
-  final bool obscureText; // Added obscureText parameter
+  final bool obscureText;
+  final Function(String)? onChanged;
+  final FocusNode? focusNode;
 
   const DETextField({
     Key? key,
@@ -14,13 +16,17 @@ class DETextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     required this.labelText,
-    this.obscureText = false, // Default to false
+    this.obscureText = false,
+    this.onChanged,
+    this.focusNode
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
+      focusNode: focusNode,
       obscureText: obscureText, // Added obscureText property
       decoration: InputDecoration(
         prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,

@@ -35,7 +35,10 @@ class _CustomDropdownState extends State<DEDropdown> {
       items: widget.items.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
-          child: Text(value),
+          child: Text(value,style:TextStyle(
+            fontSize: 12,
+            fontFamily: 'regular', // Adjust according to your font
+          ),),
         );
       }).toList(),
       onChanged: (String? value) {
@@ -45,7 +48,7 @@ class _CustomDropdownState extends State<DEDropdown> {
         widget.onChanged(value); // Call the provided onChanged function
       },
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         border: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(15)),
         ),

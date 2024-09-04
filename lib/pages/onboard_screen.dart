@@ -1,5 +1,6 @@
 import 'package:direct_emploi/models/onboarding_content_model.dart';
 import 'package:direct_emploi/pages/splash_screen.dart';
+import 'package:direct_emploi/pages/tabbar_screen.dart';
 import 'package:direct_emploi/pages/worksearch_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,11 @@ import 'package:direct_emploi/helper/style.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../services/user_manager.dart';
+
 class OnBoardScreen extends StatefulWidget {
-  const OnBoardScreen({Key? key}) : super(key: key);
+  final bool isSignup;
+  const OnBoardScreen({Key? key, required this.isSignup}) : super(key: key);
 
   static const String pageId = "OnBoardScreen";
 
@@ -135,12 +139,21 @@ class _FirstOnBoardScreenState extends State<OnBoardScreen> {
                      SizedBox():
                 TextButton(
                    onPressed: () {
-                     Navigator.pushReplacement(
-                       context,
-                       MaterialPageRoute(
-                         builder: (_) => WorkSearchScreen(),
-                       ),
-                     );
+                     if(widget.isSignup == false){
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => WorkSearchScreen(),
+                         ),
+                       );
+                     }else{
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => TabBarScreen(),
+                         ),
+                       );
+                     }
                    },
                    child: Text(
                     currentIndex == contents.length -1 ? "":"Ignorer",
@@ -154,12 +167,22 @@ class _FirstOnBoardScreenState extends State<OnBoardScreen> {
                 ElevatedButton(
                   onPressed: () {
                     if(currentIndex == contents.length - 1){
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => WorkSearchScreen(),
-                        ),
-                      );
+                      if(widget.isSignup == false){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkSearchScreen(),
+                          ),
+                        );
+                      }else{
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TabBarScreen(),
+                          ),
+                        );
+                      }
+
                     }
                     _controller.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
                   },
