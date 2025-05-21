@@ -1,169 +1,4 @@
-// import 'package:direct_emploi/datas/de_datas.dart';
-// import 'package:direct_emploi/helper/de_back_button.dart';
-// import 'package:direct_emploi/viewmodels/data_fetching_view_model.dart';
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-//
-// import '../helper/de_drop_down.dart';
-// import '../helper/de_dropdown_map.dart';
-// import '../helper/de_text_field.dart';
-// import '../helper/style.dart';
-//
-// class PersonalInfoScreen extends StatefulWidget {
-//   const PersonalInfoScreen({super.key});
-//
-//   @override
-//   State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
-// }
-//
-// class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
-//   final TextEditingController prenomController = TextEditingController();
-//   final TextEditingController nomController = TextEditingController();
-//   final TextEditingController civiliteController = TextEditingController();
-//   final TextEditingController telephoneController = TextEditingController();
-//   final TextEditingController adresseController = TextEditingController();
-//   final TextEditingController compAdresseController = TextEditingController();
-//   final TextEditingController postalController = TextEditingController();
-//   final TextEditingController villeController = TextEditingController();
-//   final TextEditingController emailController = TextEditingController();
-//
-//   int? selectedPays;
-//   int? selectedCivilite;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     Provider.of<DataFetchingViewModel>(context, listen: false).fetchListePays();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Colors.white70,
-//         elevation: 0,
-//         centerTitle: true,
-//         leading: DEBackButton(),
-//         title: Text(
-//           "Mes informations personnels",
-//           style: TextStyle(
-//               fontSize: 14, color: textColor, fontFamily: 'semi-bold'),
-//         ),
-//       ),
-//       body: SafeArea(
-//         child: Padding(
-//           padding: EdgeInsets.symmetric(horizontal: 15),
-//           child: SingleChildScrollView(
-//             child: Consumer<DataFetchingViewModel>(
-//                 builder: (context, viewModel, child) {
-//               if (viewModel.isLoadingPays) {
-//                 return Center(child: CircularProgressIndicator());
-//               } else if (viewModel.error != null) {
-//                 return Center(child: Text('Failed to load data'));
-//               } else {
-//                 return Column(
-//                   children: [
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DEDropdownMap(labelText: 'Civilité', items: genderOption, onChanged: (value ) {
-//                       setState(() {
-//                         selectedCivilite = value;
-//                       });
-//                     },
-//                     ),
-//                     SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: prenomController,
-//                       labelText: "Prénom",
-//                     ),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: nomController,
-//                       labelText: "Nom",
-//                     ),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DEDropdownMap(
-//                         labelText: "Sélectionner votre pays",
-//                         items: viewModel.listePays,
-//                         onChanged: (value) {
-//                           setState(() {
-//                             selectedPays = viewModel.metiers.keys.first;
-//                           });
-//                         }),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: emailController,
-//                       labelText: 'Email',
-//                     ),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: telephoneController,
-//                       labelText: 'Téléphone Portable',
-//                     ),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: adresseController,
-//                       labelText: 'Adresse',
-//                     ),
-//                     SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: villeController,
-//                       labelText: 'Ville',
-//                     ),
-//                     SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: compAdresseController,
-//                       labelText: "Complément d'adresse (optionnel)",
-//                     ),
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     DETextField(
-//                       controller: postalController,
-//                       labelText: 'Code postal',
-//                     ),
-//
-//                     const SizedBox(
-//                       height: 20,
-//                     ),
-//                     ElevatedButton(
-//                       style: appButton(),
-//                       onPressed: () {},
-//                       child: Text("Modifier mes infos"),
-//                     ),
-//                     SizedBox(
-//                       height: 20,
-//                     ),
-//                   ],
-//                 );
-//               }
-//             }),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
-import 'package:direct_emploi/viewmodels/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
 import '../datas/de_datas.dart';
@@ -175,60 +10,75 @@ import '../models/geo_adresse_model.dart';
 import '../models/personal_info_model.dart';
 import '../services/user_manager.dart';
 import '../viewmodels/data_fetching_view_model.dart';
+import '../viewmodels/profile_view_model.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
-  const PersonalInfoScreen({super.key});
+  const PersonalInfoScreen({Key? key}) : super(key: key);
 
   @override
   State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
 }
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
+  // ---------------------------------------------------------------------------
+  // Text Controllers
+  // ---------------------------------------------------------------------------
   final TextEditingController prenomController = TextEditingController();
   final TextEditingController nomController = TextEditingController();
   final TextEditingController telephoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController adresseController = TextEditingController();
   final TextEditingController compAdresseController = TextEditingController();
   final TextEditingController postalController = TextEditingController();
   final TextEditingController villeController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
 
+  // ---------------------------------------------------------------------------
+  // Selections
+  // ---------------------------------------------------------------------------
   int? selectedPays;
   int? selectedCivilite;
 
+  /// Whether we have set the text fields from the loaded PersonalInfo yet
+  bool _fieldsInitialized = false;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
   @override
   void initState() {
     super.initState();
-    Provider.of<DataFetchingViewModel>(context, listen: false).fetchListePays();
-    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-    profileViewModel.fetchPersonalInfo(UserManager.instance.userId!);
 
-    if (profileViewModel.profileCompletionData?['userInfo'] == false){
+    // 1) Fetch the list of countries
+    final dataVM = Provider.of<DataFetchingViewModel>(context, listen: false);
+    dataVM.fetchListePays();
+
+    // 2) Fetch the user's personal info
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    profileVM.fetchPersonalInfo(UserManager.instance.userId!);
+
+    // If user has no personal info, set some defaults
+    if (profileVM.profileCompletionData?['userInfo'] == false) {
       selectedCivilite = 1;
       selectedPays = 1;
-
     }
   }
 
-  void _updateTextFields(PersonalInfo personalInfo) {
-    prenomController.text = personalInfo.prenom ?? '';
-    nomController.text = personalInfo.nom ?? '';
-    telephoneController.text = personalInfo.telephone ?? '';
-    emailController.text = personalInfo.email ?? '';
-    if (personalInfo.geoAdresse != null) {
-      adresseController.text = personalInfo.geoAdresse!.adresse ?? '';
-      compAdresseController.text = personalInfo.geoAdresse!.complement ?? '';
-      postalController.text = personalInfo.geoAdresse!.codePostal ?? '';
-      villeController.text = personalInfo.geoAdresse!.ville ?? '';
-      if (personalInfo.geoAdresse?.pays != null) {
-        selectedPays = personalInfo.geoAdresse!.pays;
-      }
-    }
-    if (personalInfo.civilite != 0) {
-      selectedCivilite = personalInfo.civilite;
-    }
+  @override
+  void dispose() {
+    prenomController.dispose();
+    nomController.dispose();
+    telephoneController.dispose();
+    emailController.dispose();
+    adresseController.dispose();
+    compAdresseController.dispose();
+    postalController.dispose();
+    villeController.dispose();
+    super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // Build Method
+  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -236,153 +86,276 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         backgroundColor: Colors.white70,
         elevation: 0,
         centerTitle: true,
-        leading: DEBackButton(),
-        title: Text(
+        leading: const DEBackButton(),
+        title: const Text(
           "Mes informations personnelles",
-          style: TextStyle(fontSize: 14, color: textColor, fontFamily: 'semi-bold'),
+          style: TextStyle(
+            fontSize: 14,
+            color: textColor,
+            fontFamily: 'semi-bold',
+          ),
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           child: SingleChildScrollView(
             child: Consumer2<ProfileViewModel, DataFetchingViewModel>(
-              builder: (context, profileViewModel, dataFetchingViewModel, child) {
-                if (profileViewModel.isLoadingPersonal || dataFetchingViewModel.isLoadingPays) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (profileViewModel.error != null || dataFetchingViewModel.error != null) {
-                  return Center(child: Text('Failed to load data'));
-                } else {
-                  final personalInfo = profileViewModel.personalInfo;
-
-                  if (personalInfo != null) {
-                    _updateTextFields(personalInfo);
-                  }
-
-                  return Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      DEDropdownMap(
-                        labelText: 'Civilité',
-                        items: genderOption,
-                        initialKey: selectedCivilite,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCivilite = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: prenomController,
-                        labelText: "Prénom",
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: nomController,
-                        labelText: "Nom",
-                      ),
-                      const SizedBox(height: 20),
-                      DEDropdownMap(
-                        labelText: "Sélectionner votre pays",
-                        items: dataFetchingViewModel.listePays,
-                        initialKey: selectedPays,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedPays = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: emailController,
-                        labelText: 'Email',
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: telephoneController,
-                        labelText: 'Téléphone Portable',
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: adresseController,
-                        labelText: 'Adresse',
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: villeController,
-                        labelText: 'Ville',
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: compAdresseController,
-                        labelText: "Complément d'adresse (optionnel)",
-                      ),
-                      const SizedBox(height: 20),
-                      DETextField(
-                        controller: postalController,
-                        labelText: 'Code postal',
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: appButton(),
-                        onPressed: profileViewModel.isLoadingUpdatePersonal ? null : () async {
-                          if (prenomController.text.isEmpty ||
-                              nomController.text.isEmpty ||
-                              telephoneController.text.isEmpty ||
-                              emailController.text.isEmpty ||
-                              adresseController.text.isEmpty ||
-                              postalController.text.isEmpty ||
-                              villeController.text.isEmpty ||
-                              selectedCivilite == null ||
-                              selectedPays == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(
-                                  'Tous les champs sont obligatoires sauf le complément d\'adresse')),
-                            );
-                          } else {
-                            final personalInfo = PersonalInfo(
-                              civilite: selectedCivilite,
-                              nom: nomController.text,
-                              prenom: prenomController.text,
-                              telephone: telephoneController.text,
-                              email: emailController.text,
-                              geoAdresse: GeoAdresse(
-                                adresse: adresseController.text,
-                                complement: compAdresseController.text,
-                                codePostal: postalController.text,
-                                ville: villeController.text,
-                                pays: selectedPays,
-                              ),
-                            );
-
-                            final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-                            await profileViewModel.updatePersonalInfo(personalInfo);
-
-                            if (!profileViewModel.isError) {
-                              Navigator.pop(context, true);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to update personal information')),
-                              );
-                            }
-                          }
-                        },
-                        child:profileViewModel.isLoadingUpdatePersonal
-                            ? CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        )
-                            : Text("Modifier mes infos"),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  );
+              builder: (context, profileVM, dataVM, child) {
+                // Show loading if needed
+                if (profileVM.isLoadingPersonal || dataVM.isLoadingPays) {
+                  return const Center(child: CircularProgressIndicator());
                 }
+
+                // Show error if any
+                if (profileVM.error != null || dataVM.error != null) {
+                  return const Center(child: Text('Failed to load data'));
+                }
+
+                // We have personal info loaded
+                final personalInfo = profileVM.personalInfo;
+                // Initialize fields only once
+                if (!_fieldsInitialized && personalInfo != null) {
+                  _setFieldsFromPersonalInfo(personalInfo);
+                  _fieldsInitialized = true;
+                }
+
+                return Column(
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Civilité
+                    DEDropdownMap(
+                      labelText: 'Civilité',
+                      items: genderOption,
+                      initialKey: selectedCivilite ?? 1,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCivilite = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Prénom
+                    DETextField(
+                      controller: prenomController,
+                      labelText: "Prénom",
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Nom
+                    DETextField(
+                      controller: nomController,
+                      labelText: "Nom",
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Pays
+                    DEDropdownMap(
+                      labelText: "Sélectionner votre pays",
+                      items: dataVM.listePays,
+                      initialKey: selectedPays ?? 1,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedPays = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Email
+                    DETextField(
+                      controller: emailController,
+                      labelText: 'Email',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Téléphone
+                    DETextField(
+                      controller: telephoneController,
+                      labelText: 'Téléphone Portable',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Adresse
+                    DETextField(
+                      controller: adresseController,
+                      labelText: 'Adresse',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Ville
+                    DETextField(
+                      controller: villeController,
+                      labelText: 'Ville',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Complément
+                    DETextField(
+                      controller: compAdresseController,
+                      labelText: "Complément d'adresse (optionnel)",
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Code Postal
+                    DETextField(
+                      controller: postalController,
+                      labelText: 'Code postal',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Submit button
+                    ElevatedButton(
+                      style: appButton(),
+                      onPressed: profileVM.isLoadingUpdatePersonal
+                          ? null
+                          : () async {
+                        // Validate fields
+                        if (_hasEmptyMandatoryFields()) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Tous les champs sont obligatoires sauf le complément d\'adresse.',
+                              ),
+                            ),
+                          );
+                        } else if (_validateFrenchPhoneNumber(telephoneController.text) )
+                        {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Numéro invalide (format: +33X ou 0X).',
+                              ),
+                            ),
+                          );
+                        }else if (_validatePostalCode(postalController.text) )
+                        {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Le code postal doit contenir 5 chiffres.',
+                              ),
+                            ),
+                          );
+                        }
+                          else {
+                          await _submitPersonalInfo(profileVM);
+                        }
+                      },
+                      child: profileVM.isLoadingUpdatePersonal
+                          ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                          : const Text("Modifier mes infos"),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                );
               },
             ),
           ),
         ),
       ),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  /// Updates the controllers and dropdown values from the loaded [personalInfo]
+  void _setFieldsFromPersonalInfo(PersonalInfo personalInfo) {
+    prenomController.text = personalInfo.prenom ?? '';
+    nomController.text = personalInfo.nom ?? '';
+    telephoneController.text = personalInfo.telephone ?? '';
+    emailController.text = personalInfo.email ?? '';
+
+    selectedCivilite = (personalInfo.civilite != 0)
+        ? personalInfo.civilite
+        : selectedCivilite; // fallback to existing or default
+
+    if (personalInfo.geoAdresse != null) {
+      adresseController.text = personalInfo.geoAdresse?.adresse ?? '';
+      compAdresseController.text = personalInfo.geoAdresse?.complement ?? '';
+      postalController.text = personalInfo.geoAdresse?.codePostal ?? '';
+      villeController.text = personalInfo.geoAdresse?.ville ?? '';
+      if (personalInfo.geoAdresse?.pays != null) {
+        selectedPays = personalInfo.geoAdresse!.pays;
+      }
+    }
+  }
+
+  /// Checks whether any required text fields or dropdowns are empty
+  bool _hasEmptyMandatoryFields() {
+    print("Submitting Personal Info:");
+    print("Civilité: $selectedCivilite");
+    print("Nom: ${nomController.text}");
+    print("Prénom: ${prenomController.text}");
+    print("Téléphone: ${telephoneController.text}");
+    print("Email: ${emailController.text}");
+    print("Adresse: ${adresseController.text}");
+    print("Complément d'adresse: ${compAdresseController.text}");
+    print("Code Postal: ${postalController.text}");
+    print("Ville: ${villeController.text}");
+    print("Pays: $selectedPays");
+
+    return prenomController.text.isEmpty ||
+        nomController.text.isEmpty ||
+        telephoneController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        adresseController.text.isEmpty ||
+        postalController.text.isEmpty ||
+        villeController.text.isEmpty ||
+        selectedCivilite == null ||
+        selectedPays == null;
+  }
+  bool _validateFrenchPhoneNumber(String? value) {
+    if (value == null || !RegExp(r'^(\+33[0-9]{9}|0[0-9]{9})$').hasMatch(value)) {
+      return true; //"Numéro invalide (format: +33X ou 0X)"
+    }
+    return false;
+  }
+
+  bool _validatePostalCode(String? value) {
+    if (value == null || !RegExp(r'^\d{5}$').hasMatch(value)) {
+      return true; //"Le code postal doit contenir 5 chiffres.";
+    }
+    return false;
+  }
+
+  /// Builds and submits the updated [PersonalInfo] to the ProfileViewModel
+  Future<void> _submitPersonalInfo(ProfileViewModel profileVM) async {
+
+
+    final updated = PersonalInfo(
+      civilite: selectedCivilite,
+      nom: nomController.text,
+      prenom: prenomController.text,
+      telephone: telephoneController.text,
+      email: emailController.text,
+      geoAdresse: GeoAdresse(
+        adresse: adresseController.text,
+        complement: compAdresseController.text,
+        codePostal: postalController.text,
+        ville: villeController.text,
+        pays: selectedPays,
+      ),
+    );
+
+    await profileVM.updatePersonalInfo(updated);
+
+    if (!profileVM.isError) {
+      // If no error, pop with success
+      Navigator.pop(context, true);
+    } else {
+      // Show an error if needed
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update personal information'),
+        ),
+      );
+    }
   }
 }

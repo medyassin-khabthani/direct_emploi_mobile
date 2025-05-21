@@ -1,6 +1,7 @@
 import 'package:direct_emploi/helper/de_back_button.dart';
 import 'package:direct_emploi/pages/tabbar_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../datas/de_datas.dart';
@@ -456,7 +457,7 @@ class _SearchOffersScreenState extends State<SearchOffersScreen> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: "${viewModel.total} ",
+                                    text: "${NumberFormat("#,###", "fr_FR").format(viewModel.total)} ",
                                     style: TextStyle(fontSize: 16, fontFamily: "semi-bold", color: textColor),
                                   ),
                                   TextSpan(

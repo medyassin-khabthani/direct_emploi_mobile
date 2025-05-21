@@ -1,24 +1,31 @@
-import 'package:direct_emploi/helper/style.dart';
 import 'package:flutter/material.dart';
+
+import '../helper/style.dart';
 
 class DEDropdownMap extends StatefulWidget {
   final String labelText;
   final Map<int, String> items;
-  final int? initialKey; // Added initialKey parameter
+
+  /// If you want to set an initial selection the first time
+  final int? initialKey;
+
+  /// If you want to override the selected key from above
   final int? forcedSelectedKey;
-  final Function(int?) onChanged; // Changed to Function for flexibility
+
+  /// Called when the user picks a new item
+  final ValueChanged<int?> onChanged;
 
   const DEDropdownMap({
     Key? key,
     required this.labelText,
     required this.items,
     this.initialKey,
-    required this.onChanged,
     this.forcedSelectedKey,
+    required this.onChanged,
   }) : super(key: key);
 
   @override
-  _DEDropdownMapState createState() => _DEDropdownMapState();
+  State<DEDropdownMap> createState() => _DEDropdownMapState();
 }
 
 class _DEDropdownMapState extends State<DEDropdownMap> {
@@ -27,42 +34,37 @@ class _DEDropdownMapState extends State<DEDropdownMap> {
   @override
   void initState() {
     super.initState();
+    // Use initialKey if provided, else use the first item’s key, else null
     _selectedKey = widget.initialKey ?? widget.items.keys.first;
   }
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<int>(
+      // If forcedSelectedKey is non-null, it overrides _selectedKey
       value: widget.forcedSelectedKey ?? _selectedKey,
       items: widget.items.entries.map<DropdownMenuItem<int>>((entry) {
         return DropdownMenuItem<int>(
           value: entry.key,
           child: Text(
             entry.value,
-            style: TextStyle(
-              fontSize: 12,
-              fontFamily: 'regular', // Adjust according to your font
-            ),
+            style: const TextStyle(fontSize: 12, fontFamily: 'regular'),
           ),
         );
       }).toList(),
-      onChanged: (int? key) {
-        setState(() {
-          _selectedKey = key;
-        });
-        widget.onChanged(key); // Call the provided onChanged function
+      onChanged: (int? newKey) {
+        setState(() => _selectedKey = newKey);
+        widget.onChanged(newKey);
       },
       selectedItemBuilder: (BuildContext context) {
+        // This determines how the selected item is displayed
         return widget.items.entries.map<Widget>((entry) {
-          return Container(
-            width: MediaQuery.of(context).size.width * 0.75, // Adjust the width as needed
+          return SizedBox(
+            width: MediaQuery.of(context).size.width * 0.75,
             child: Text(
               entry.value,
-              overflow: TextOverflow.ellipsis, // Handle long text with ellipsis
-              style: TextStyle(
-                fontSize: 12,
-                fontFamily: 'regular', // Adjust according to your font
-              ),
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontFamily: 'regular'),
             ),
           );
         }).toList();
@@ -73,13 +75,12 @@ class _DEDropdownMapState extends State<DEDropdownMap> {
           borderRadius: BorderRadius.all(Radius.circular(15)),
         ),
         filled: true,
-        fillColor: inputBackground, // Default background color
-        prefixIconColor: paragraphColor, // Default prefix icon color
+        fillColor: inputBackground,
         labelText: widget.labelText,
         labelStyle: const TextStyle(
-          overflow: TextOverflow.ellipsis, // Handle long text in label
+          overflow: TextOverflow.ellipsis,
           fontSize: 12,
-          fontFamily: 'regular', // Adjust according to your font
+          fontFamily: 'regular',
         ),
       ),
     );

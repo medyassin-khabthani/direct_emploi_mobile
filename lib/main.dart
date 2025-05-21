@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
 
           primaryColor: appColor,
-          colorScheme: ColorScheme.fromSeed(seedColor: appColor),
+          colorScheme: ColorScheme.fromSeed(seedColor: appColor,surfaceTint:Colors.white70),
           fontFamily: 'regular',
           useMaterial3: true,
             textSelectionTheme: const TextSelectionThemeData(

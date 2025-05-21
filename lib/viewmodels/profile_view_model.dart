@@ -108,7 +108,7 @@ import '../models/cv_model.dart';
         print('Error uploading CV: $_error');
       }
 
-      _isLoading = false;
+      _isLoadingUpdate = false;
       notifyListeners();
     }
 

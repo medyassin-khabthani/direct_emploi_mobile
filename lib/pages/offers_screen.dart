@@ -1,11 +1,13 @@
 import 'package:direct_emploi/viewmodels/profile_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../datas/de_datas.dart';
 import '../helper/de_text_field.dart';
+import '../helper/offre_card.dart';
 import '../helper/singleselect_input.dart';
 import '../helper/style.dart';
-import '../helper/offre_card.dart';
 import '../pages/single_offer_screen.dart';
 import '../services/user_manager.dart';
 import '../utils/time_formatting.dart';
@@ -13,169 +15,56 @@ import '../viewmodels/offre_view_model.dart';
 import '../viewmodels/favorite_view_model.dart';
 
 class OffersScreen extends StatefulWidget {
-  const OffersScreen({super.key});
+  const OffersScreen({Key? key}) : super(key: key);
 
   @override
   State<OffersScreen> createState() => _OffersScreenState();
 }
 
 class _OffersScreenState extends State<OffersScreen> {
-  int offset = 0;
-  final int limit = 10;
+  // ---------------------------------------------------------------------------
+  // State & Controllers
+  // ---------------------------------------------------------------------------
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController searchController = TextEditingController();
+  final TextEditingController localisationController = TextEditingController();
+
   bool isAtTop = true;
-  TextEditingController searchController = TextEditingController();
-  TextEditingController localisationController = TextEditingController();
-  String selectedContrat = "";
-  String query = "";
-  String localisation = "";
-  UserManager userManager = UserManager.instance;
-  String sortOption = "pertinence";
-  String? based;
   bool customSearch = false;
 
+  // Pagination
+  int offset = 0;
+  final int limit = 10;
+
+  // Query params
+  String query = "";
+  String localisation = "";
+  String selectedContrat = "";
+  String sortOption = "pertinence"; // "pertinence" or "date"
+
+  // We store the "based" config from user preferences (profil / cv / none)
+  String? based;
+
+  // Singleton instance
+  UserManager userManager = UserManager.instance;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
   @override
   void initState() {
     super.initState();
-    final viewModel = Provider.of<OffreViewModel>(context, listen: false);
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
+
+    // Load user-applied offers
+    offreVM.fetchAppliedOffers(userManager.userId!);
+
+    // Initialize with the search from user config
     _initSearch();
 
-    viewModel.fetchAppliedOffers(userManager.userId!);
-
+    // Listeners for scrolling
     _scrollController.addListener(_scrollListener);
     _scrollController.addListener(_loadMoreListener);
-  }
-
-  void _initSearch() {
-    final profileViewModel =
-        Provider.of<ProfileViewModel>(context, listen: false);
-    final viewModel = Provider.of<OffreViewModel>(context, listen: false);
-
-    profileViewModel.getUserConfiguration().then((_) {
-      if (profileViewModel.userConfiguration != null) {
-        setState(() {
-          based =
-              profileViewModel.userConfiguration!.configuration.based ?? 'none';
-        });
-        if (based == "profil") {
-          setState(() {
-            query = profileViewModel.userConfiguration!.configuration.q!;
-            localisation =
-                profileViewModel.userConfiguration!.configuration.localisation!;
-          });
-        }
-        if (based == "cv") {
-          setState(() {
-            query = profileViewModel.userConfiguration!.configuration.q!;
-          });
-        }
-        if (based == "none") {
-          setState(() {
-            query = "";
-          });
-        }
-      }
-      viewModel.fetchOffersWithoutSave(
-          userManager.userId!,
-          {
-            "q": query,
-            "localisation": localisation,
-            "contrat": selectedContrat
-          },
-          offset,
-          limit);
-    });
-    setState(() {
-      customSearch = false;
-    });
-  }
-
-  void _scrollListener() {
-    if (_scrollController.offset <=
-            _scrollController.position.minScrollExtent &&
-        !isAtTop) {
-      setState(() {
-        isAtTop = true;
-      });
-    } else if (_scrollController.offset >
-            _scrollController.position.minScrollExtent &&
-        isAtTop) {
-      setState(() {
-        isAtTop = false;
-      });
-    }
-  }
-
-  void _loadMoreListener() {
-    final viewModel = Provider.of<OffreViewModel>(context, listen: false);
-    if (_scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent &&
-        !viewModel.isLoading) {
-      setState(() {
-        offset += limit;
-      });
-      if (sortOption == "date") {
-        viewModel.fetchMoreOffersWithoutSaveByDate(
-            userManager.userId!,
-            {
-              "q": query,
-              "localisation": localisation,
-              "contrat": selectedContrat
-            },
-            offset,
-            limit);
-      } else {
-        viewModel.fetchMoreOffersWithoutSave(
-            userManager.userId!,
-            {
-              "q": query,
-              "localisation": localisation,
-              "contrat": selectedContrat
-            },
-            offset,
-            limit);
-      }
-    }
-  }
-
-  void _scrollToTop() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.minScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  Future<void> _refreshOffers() async {
-    final viewModel = Provider.of<OffreViewModel>(context, listen: false);
-    setState(() {
-      offset = 0;
-    });
-    if (sortOption == "date") {
-      await viewModel.fetchOffersWithoutSaveByDate(
-          userManager.userId!,
-          {
-            "q": query,
-            "localisation": localisation,
-            "contrat": selectedContrat
-          },
-          offset,
-          limit);
-    } else {
-      await viewModel.fetchOffersWithoutSave(
-          userManager.userId!,
-          {
-            "q": query,
-            "localisation": localisation,
-            "contrat": selectedContrat
-          },
-          offset,
-          limit);
-    }
   }
 
   @override
@@ -183,193 +72,256 @@ class _OffersScreenState extends State<OffersScreen> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.removeListener(_loadMoreListener);
     _scrollController.dispose();
+    searchController.dispose();
+    localisationController.dispose();
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // Initialization & Data Loading
+  // ---------------------------------------------------------------------------
+  /// Initializes query/localisation from user configuration and fetches offers
+  void _initSearch() {
+    final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
+
+    profileVM.getUserConfiguration().then((_) {
+      if (profileVM.userConfiguration != null) {
+        based = profileVM.userConfiguration!.configuration.based ?? 'none';
+
+        // If based on profile or CV, fill query / localisation from config
+        if (based == "profil") {
+          query = profileVM.userConfiguration!.configuration.q ?? "";
+          localisation =
+              profileVM.userConfiguration!.configuration.localisation ?? "";
+        } else if (based == "cv") {
+          query = profileVM.userConfiguration!.configuration.q ?? "";
+        } else {
+          query = "";
+          localisation = "";
+        }
+      }
+
+      // Fetch offers
+      offreVM.fetchOffersWithoutSave(
+        userManager.userId!,
+        {"q": query, "localisation": localisation, "contrat": selectedContrat},
+        offset,
+        limit,
+      );
+    });
+
+    // We haven't customized the search yet
+    // (Though you could also do setState(() => customSearch = false) here)
+    customSearch = false;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Scrolling Logic
+  // ---------------------------------------------------------------------------
+  void _scrollListener() {
+    if (_scrollController.offset <=
+        _scrollController.position.minScrollExtent &&
+        !isAtTop) {
+      setState(() => isAtTop = true);
+    } else if (_scrollController.offset >
+        _scrollController.position.minScrollExtent &&
+        isAtTop) {
+      setState(() => isAtTop = false);
+    }
+  }
+
+  /// Loads the next page when we reach the bottom
+  void _loadMoreListener() {
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent &&
+        !offreVM.isLoading) {
+      offset += limit;
+      if (sortOption == "date") {
+        offreVM.fetchMoreOffersWithoutSaveByDate(
+          userManager.userId!,
+          {"q": query, "localisation": localisation, "contrat": selectedContrat},
+          offset,
+          limit,
+        );
+      } else {
+        offreVM.fetchMoreOffersWithoutSave(
+          userManager.userId!,
+          {"q": query, "localisation": localisation, "contrat": selectedContrat},
+          offset,
+          limit,
+        );
+      }
+    }
+  }
+
+  /// Scrolls up
+  void _scrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Partial Refresh: Favorites + Applied
+  // ---------------------------------------------------------------------------
+  Future<void> _refreshSavedOffres() async {
+    final favVM = Provider.of<FavoriteViewModel>(context, listen: false);
+    await favVM.fetchSavedOffers(userManager.userId!);
+  }
+
+  Future<void> _refreshAppliedOffers() async {
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
+    await offreVM.fetchAppliedOffers(userManager.userId!);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Full Refresh (Pull to Refresh or Sort)
+  // ---------------------------------------------------------------------------
+  Future<void> _refreshOffers() async {
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
+    offset = 0;
+    if (sortOption == "date") {
+      await offreVM.fetchOffersWithoutSaveByDate(
+        userManager.userId!,
+        {"q": query, "localisation": localisation, "contrat": selectedContrat},
+        offset,
+        limit,
+      );
+    } else {
+      await offreVM.fetchOffersWithoutSave(
+        userManager.userId!,
+        {"q": query, "localisation": localisation, "contrat": selectedContrat},
+        offset,
+        limit,
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Searching & Sorting
+  // ---------------------------------------------------------------------------
   void _showSearchBottomSheet() {
-    final viewModel = Provider.of<OffreViewModel>(context, listen: false);
+    final offreVM = Provider.of<OffreViewModel>(context, listen: false);
 
     showModalBottomSheet(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // Set corner radius to zero
-      ),
-      useSafeArea: true,
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       builder: (context) {
         return Container(
-          padding: EdgeInsets.all(15.0),
+          padding: const EdgeInsets.all(15.0),
           child: Column(
             mainAxisSize: MainAxisSize.max,
             children: [
-              Text("Rechercher",
+              const Text("Rechercher",
                   style: TextStyle(fontFamily: "semi-bold", fontSize: 18)),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+
+              // Autocomplete for jobs
               Autocomplete<String>(
                 optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == "") {
+                  if (textEditingValue.text.isEmpty) {
                     return const Iterable<String>.empty();
                   }
-                  return jobs.where((String item) {
-                    return item
-                        .toLowerCase()
-                        .contains(textEditingValue.text.toLowerCase());
-                  });
+                  return jobs.where((String item) => item
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase()));
                 },
-                onSelected: (String item) {
-                  searchController.text = item;
-                },
-                fieldViewBuilder: (BuildContext context,
-                    TextEditingController fieldTextEditingController,
-                    FocusNode fieldFocusNode,
-                    VoidCallback onFieldSubmitted) {
+                onSelected: (String item) => searchController.text = item,
+                fieldViewBuilder:
+                    (context, fieldTextController, focusNode, onFieldSubmitted) {
                   return DETextField(
-                    controller: fieldTextEditingController,
+                    controller: fieldTextController,
                     labelText: "Votre recherche",
-                    focusNode:fieldFocusNode ,
-                    onChanged: (value) {
-                      searchController.text = value;
-                    },
-                  );
-                },
-                optionsViewBuilder: (BuildContext context,
-                    AutocompleteOnSelected<String> onSelected,
-                    Iterable<String> options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      child: Container(
-                        color: headerBackground,
-                        width: MediaQuery.of(context).size.width -
-                            86, // Match the width of the parent container
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 16), // Add some margin
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: options.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final String option = options.elementAt(index);
-                            return GestureDetector(
-                              onTap: () {
-                                onSelected(option);
-                              },
-                              child: ListTile(
-                                title: Text(option),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    focusNode: focusNode,
+                    onChanged: (value) => searchController.text = value,
                   );
                 },
               ),
-              // DETextField(
-              //     controller: searchController, labelText: "Votre recherche"),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+
+              // Autocomplete for locations
               Autocomplete<String>(
                 optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == "") {
+                  if (textEditingValue.text.isEmpty) {
                     return const Iterable<String>.empty();
                   }
-                  return locations.where((String item) {
-                    return item.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                  });
+                  return locations.where((String item) => item
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase()));
                 },
-                onSelected: (String item) {
-                  localisationController.text = item;
-                },
-                fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+                onSelected: (String item) => localisationController.text = item,
+                fieldViewBuilder:
+                    (context, fieldTextController, focusNode, onFieldSubmitted) {
                   return DETextField(
-                    controller: fieldTextEditingController,
+                    controller: fieldTextController,
                     labelText: "Votre Localisation",
-                    focusNode:fieldFocusNode ,
-                    onChanged: (value) {
-                      localisationController.text = value;
-                    },
-                  );
-                },
-                optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      child: Container(
-                        color:headerBackground,
-                        width: MediaQuery.of(context).size.width - 86, // Match the width of the parent container
-                        margin: const EdgeInsets.symmetric(horizontal: 16), // Add some margin
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: options.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final String option = options.elementAt(index);
-                            return GestureDetector(
-                              onTap: () {
-                                onSelected(option);
-                              },
-                              child: ListTile(
-                                title: Text(option),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    focusNode: focusNode,
+                    onChanged: (value) => localisationController.text = value,
                   );
                 },
               ),
-              // DETextField(
-              //     controller: localisationController,
-              //     labelText: "Votre Localisation"),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+
               SingleSelectChip(
                 contratOptions,
                 onSelectionChanged: (selectedItem) {
-                  setState(() {
-                    selectedContrat = selectedItem;
-                    print(selectedContrat);
-                  });
+                  setState(() => selectedContrat = selectedItem);
                 },
               ),
-              Spacer(),
+              const Spacer(),
               ElevatedButton(
-                onPressed: () {
+                style: appButton(),
+                onPressed: () async {
                   setState(() {
                     customSearch = true;
                     query = searchController.text;
                     localisation = localisationController.text;
                   });
+
+                  offset = 0; // reset offset
                   if (sortOption == "date") {
-                    viewModel.fetchOffersWithoutSaveByDate(
-                        userManager.userId!,
-                        {
-                          "q": query,
-                          "localisation": localisation,
-                          "contrat": selectedContrat
-                        },
-                        offset,
-                        limit);
+                    await offreVM.fetchOffersWithoutSaveByDate(
+                      userManager.userId!,
+                      {
+                        "q": query,
+                        "localisation": localisation,
+                        "contrat": selectedContrat
+                      },
+                      offset,
+                      limit,
+                    );
                   } else {
-                    viewModel.fetchOffersWithoutSave(
-                        userManager.userId!,
-                        {
-                          "q": query,
-                          "localisation": localisation,
-                          "contrat": selectedContrat
-                        },
-                        offset,
-                        limit);
+                    await offreVM.fetchOffersWithoutSave(
+                      userManager.userId!,
+                      {
+                        "q": query,
+                        "localisation": localisation,
+                        "contrat": selectedContrat
+                      },
+                      offset,
+                      limit,
+                    );
                   }
-                  if (!viewModel.isError) {
+
+                  if (!offreVM.isError) {
                     Navigator.pop(context);
                   } else {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Une erreur est survenue")),
+                      const SnackBar(content: Text("Une erreur est survenue")),
                     );
                   }
                 },
-                style: appButton(),
-                child: Text('Nouvelle recherche'),
+                child: const Text('Nouvelle recherche'),
               ),
             ],
           ),
@@ -383,7 +335,7 @@ class _OffersScreenState extends State<OffersScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Trier par"),
+          title: const Text("Trier par"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -392,11 +344,11 @@ class _OffersScreenState extends State<OffersScreen> {
                 value: 'pertinence',
                 groupValue: sortOption,
                 onChanged: (String? value) {
-                  setState(() {
-                    sortOption = value!;
-                  });
-                  Navigator.pop(context);
-                  _refreshOffers();
+                  if (value != null) {
+                    setState(() => sortOption = value);
+                    Navigator.pop(context);
+                    _refreshOffers();
+                  }
                 },
               ),
               RadioListTile<String>(
@@ -404,11 +356,11 @@ class _OffersScreenState extends State<OffersScreen> {
                 value: 'date',
                 groupValue: sortOption,
                 onChanged: (String? value) {
-                  setState(() {
-                    sortOption = value!;
-                  });
-                  Navigator.pop(context);
-                  _refreshOffers();
+                  if (value != null) {
+                    setState(() => sortOption = value);
+                    Navigator.pop(context);
+                    _refreshOffers();
+                  }
                 },
               ),
             ],
@@ -418,23 +370,21 @@ class _OffersScreenState extends State<OffersScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: isAtTop
           ? null
-          : Container(
-              margin: EdgeInsets.only(bottom: 0),
-              child: FloatingActionButton(
-                mini: true,
-                onPressed: _scrollToTop,
-                child:
-                    Icon(Icons.arrow_upward_rounded, color: appColor, size: 24),
-                backgroundColor: Colors.white,
-              ),
-            ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterFloat,
+          : FloatingActionButton(
+        mini: true,
+        backgroundColor: Colors.white,
+        onPressed: _scrollToTop,
+        child: Icon(Icons.arrow_upward_rounded, color: appColor, size: 24),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterFloat,
       appBar: _buildAppbar(),
       body: SafeArea(
         child: Padding(
@@ -451,18 +401,19 @@ class _OffersScreenState extends State<OffersScreen> {
       elevation: 0,
       centerTitle: true,
       automaticallyImplyLeading: false,
-      leading: customSearch == true
+      leading: customSearch
           ? IconButton(
-              onPressed: () {
-                _initSearch();
-              },
-              icon: Icon(Icons.close_rounded),
-            )
-          : SizedBox(),
-      title: Text(
+        onPressed: () {
+          /// The fix: hide the X by setting customSearch to false
+          setState(() => customSearch = false);
+          _initSearch(); // resets search to user config
+        },
+        icon: const Icon(Icons.close_rounded),
+      )
+          : const SizedBox(),
+      title: const Text(
         "Liste des emplois",
-        style:
-            TextStyle(fontSize: 14, color: textColor, fontFamily: 'semi-bold'),
+        style: TextStyle(fontSize: 14, color: textColor, fontFamily: 'semi-bold'),
       ),
       actions: [
         IconButton(
@@ -475,207 +426,75 @@ class _OffersScreenState extends State<OffersScreen> {
 
   Widget _buildBody() {
     return Consumer2<OffreViewModel, FavoriteViewModel>(
-      builder: (context, offreViewModel, favoriteViewModel, child) {
-        if (offreViewModel.isLoading) {
-          return Center(child: CircularProgressIndicator());
-        } else if (offreViewModel.offres.isEmpty) {
-          return Column(children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${offreViewModel.total} ",
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: "semi-bold",
-                                      color: textColor),
-                                ),
-                                TextSpan(
-                                  text: 'offres trouvés',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: "medium",
-                                      color: textColor),
-                                ),
-                              ],
-                            ),
-                          ),
-                          based == 'profil' && customSearch == false
-                              ? Text(
-                                  "Basé sur votre profil",
-                                  style: TextStyle(
-                                      fontSize: 12, fontFamily: 'regular'),
-                                )
-                              : SizedBox(),
-                          based == 'cv' && customSearch == false
-                              ? Text(
-                                  "Basé sur votre cv",
-                                  style: TextStyle(
-                                      fontSize: 12, fontFamily: 'regular'),
-                                )
-                              : SizedBox(),
-                          if (customSearch == true)
-                            Text(
-                              "Basé sur votre recherche",
-                              style: TextStyle(
-                                  fontSize: 12, fontFamily: 'regular'),
-                            )
-                        ],
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.filter_list_outlined,
-                            color: paragraphColor),
-                        onPressed: _showSortOptions,
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      Icons.work,
-                      size: 62,
-                      color: paragraphColor,
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      textAlign: TextAlign.center,
-                      "Désolé, nous n'avons pas trouvé d'offres qui correspondent à vos critères.",
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: paragraphColor,
-                          fontFamily: 'medium'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          ]);
+      builder: (context, offreVM, favoriteVM, child) {
+        if (offreVM.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (offreVM.offres.isEmpty) {
+          return _buildEmptyOffers(offreVM);
         } else {
           return RefreshIndicator(
             onRefresh: _refreshOffers,
             child: SingleChildScrollView(
               controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: "${offreViewModel.total} ",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontFamily: "semi-bold",
-                                            color: textColor),
-                                      ),
-                                      TextSpan(
-                                        text: 'offres trouvés',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontFamily: "medium",
-                                            color: textColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                based == 'profil' && customSearch == false
-                                    ? Text(
-                                        "Basé sur votre profil",
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'regular'),
-                                      )
-                                    : SizedBox(),
-                                based == 'cv' && customSearch == false
-                                    ? Text(
-                                        "Basé sur votre cv",
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'regular'),
-                                      )
-                                    : SizedBox(),
-                                if (customSearch == true)
-                                  Text(
-                                    "Basé sur votre recherche",
-                                    style: TextStyle(
-                                        fontSize: 12, fontFamily: 'regular'),
-                                  )
-                              ],
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.filter_list_outlined,
-                                  color: paragraphColor),
-                              onPressed: _showSortOptions,
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildOffersHeader(offreVM),
                   Column(
-                    children: offreViewModel.offres.map((offer) {
-                      bool isApplied =
-                          offreViewModel.appliedOffers.contains(offer.id);
+                    children: offreVM.offres.map((offer) {
+                      final bool isApplied = offreVM.appliedOffers.contains(offer.id);
                       return Opacity(
                         opacity: isApplied ? 0.6 : 1.0,
                         child: OffreCard(
                           companyLogoPath:
-                              "https://www.directemploi.com/uploads/logos/${offer.company.logo}",
+                          "https://www.directemploi.com/uploads/logos/${offer.company.logo}",
                           jobTitle: "${offer.title!} - ${offer.company.name}",
                           reference: offer.reference!,
-                          date: formatLocationDate(offer.location.region!,
-                              offer.location.city!, offer.dateSoumission!),
+                          date: formatLocationDate(
+                            offer.location.region!,
+                            offer.location.city!,
+                            offer.dateSoumission!,
+                          ),
                           jobDescription: limitToLines(offer.mission!, 2, 150),
                           tags: [offer.contractType!, offer.sector!],
-                          onPressed: () {
-                            Navigator.push(
+                          // On card tap:
+                          onPressed: () async {
+                            final double oldOffset = _scrollController.offset;
+                            // Navigate to single offer
+                            final result = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => SingleOfferScreen(
-                                        offerId: offer.id.toString(),
-                                        isSameCompany: false,
-                                      )),
-                            ).then((val) {
-                              if (val == true) {
-                                _refreshSavedOffres();
-                                _refreshOffers();
-                              }
-                            });
+                                builder: (context) => SingleOfferScreen(
+                                  offerId: offer.id.toString(),
+                                  isSameCompany: false,
+                                ),
+                              ),
+                            );
+                            // If user changed something (applied/favorited) in SingleOfferScreen
+                            if (result == true) {
+                              await _refreshSavedOffres();
+                              await _refreshAppliedOffers();
+                              // Re-scroll to old offset if possible
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (_scrollController.hasClients) {
+                                  final double maxScroll =
+                                      _scrollController.position.maxScrollExtent;
+                                  final double newOffset = (oldOffset > maxScroll)
+                                      ? maxScroll
+                                      : oldOffset;
+                                  _scrollController.jumpTo(newOffset);
+                                }
+                              });
+                            }
                           },
-                          isFavorite:
-                              favoriteViewModel.savedOffers.contains(offer.id),
+                          // Favorite toggling
+                          isFavorite: favoriteVM.savedOffers.contains(offer.id),
                           onFavoriteToggle: () async {
-                            if (favoriteViewModel.savedOffers
-                                .contains(offer.id)) {
-                              await favoriteViewModel.unsaveOffer(
+                            if (favoriteVM.savedOffers.contains(offer.id)) {
+                              await favoriteVM.unsaveOffer(
                                   userManager.userId!, offer.id);
                             } else {
-                              await favoriteViewModel.saveOffer(
+                              await favoriteVM.saveOffer(
                                   userManager.userId!, offer.id);
                             }
                           },
@@ -683,8 +502,8 @@ class _OffersScreenState extends State<OffersScreen> {
                       );
                     }).toList(),
                   ),
-                  if (offreViewModel.isLoadingMore)
-                    Center(child: CircularProgressIndicator()),
+                  if (offreVM.isLoadingMore)
+                    const Center(child: CircularProgressIndicator()),
                 ],
               ),
             ),
@@ -694,18 +513,83 @@ class _OffersScreenState extends State<OffersScreen> {
     );
   }
 
-  Future<void> _refreshSavedOffres() async {
-    print('Refreshing saved Offres');
-    final viewModel = Provider.of<FavoriteViewModel>(context, listen: false);
-    await viewModel.fetchSavedOffers(userManager.userId!);
-    print('Finished refreshing saved Offres');
+  /// Builds the header showing total offers, plus the “based on” message & filter button
+  Widget _buildOffersHeader(OffreViewModel offreVM) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text:
+                      "${NumberFormat("#,###", "fr_FR").format(offreVM.total)} ",
+                      style: const TextStyle(
+                          fontSize: 16, fontFamily: "semi-bold", color: textColor),
+                    ),
+                    const TextSpan(
+                      text: 'offres trouvés',
+                      style: TextStyle(
+                          fontSize: 16, fontFamily: "medium", color: textColor),
+                    ),
+                  ],
+                ),
+              ),
+              if (based == 'profil' && !customSearch)
+                const Text("Basé sur votre profil",
+                    style: TextStyle(fontSize: 12, fontFamily: 'regular')),
+              if (based == 'cv' && !customSearch)
+                const Text("Basé sur votre cv",
+                    style: TextStyle(fontSize: 12, fontFamily: 'regular')),
+              if (customSearch)
+                const Text("Basé sur votre recherche",
+                    style: TextStyle(fontSize: 12, fontFamily: 'regular')),
+            ]),
+            IconButton(
+              icon: Icon(Icons.filter_list_outlined, color: paragraphColor),
+              onPressed: _showSortOptions,
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  /// Builds UI when no offers match
+  Widget _buildEmptyOffers(OffreViewModel offreVM) {
+    return Column(
+      children: [
+        _buildOffersHeader(offreVM),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const <Widget>[
+                Icon(Icons.work, size: 62, color: paragraphColor),
+                SizedBox(height: 20),
+                Text(
+                  textAlign: TextAlign.center,
+                  "Désolé, nous n'avons pas trouvé d'offres qui correspondent à vos critères.",
+                  style: TextStyle(
+                      fontSize: 14, color: paragraphColor, fontFamily: 'medium'),
+                ),
+              ],
+            ),
+          ),
+        )
+      ],
+    );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Utility: Limits text to at most [maxLines] or [maxLength] and adds "..."
+// ---------------------------------------------------------------------------
 String limitToLines(String text, int maxLines, int maxLength) {
-  if (text.length <= maxLength) {
-    return text;
-  }
+  if (text.length <= maxLength) return text;
 
   int endIndex = maxLength;
   for (int i = 0; i < maxLines; i++) {

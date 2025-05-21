@@ -27,153 +27,135 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  UserManager userManager = UserManager.instance;
+  late Future<void> _profileFuture;
 
   @override
   void initState() {
-  super.initState();
+    super.initState();
+    _profileFuture = _loadData();
   }
-  @override
-  void didChangeDependencies() async {
-    super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final profileViewModel =
-      Provider.of<ProfileViewModel>(context, listen: false);
 
-      await Provider.of<FavoriteViewModel>(context, listen: false)
-          .fetchSavedOffers(userManager.userId!);
-      await Provider.of<OffreViewModel>(context, listen: false)
-          .fetchAppliedOffers(userManager.userId!);
-      await profileViewModel.fetchPersonalInfo(userManager.userId!);
+  /// Fetches profile data efficiently
+  Future<void> _loadData() async {
+    final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
+    final favoriteViewModel = Provider.of<FavoriteViewModel>(context, listen: false);
+    final offreViewModel = Provider.of<OffreViewModel>(context, listen: false);
+    final userId = UserManager.instance.userId!;
 
-      await profileViewModel.fetchProfileCompletion(userManager.userId!);
+    await Future.wait([
+      favoriteViewModel.fetchSavedOffers(userId),
+      offreViewModel.fetchAppliedOffers(userId),
+      profileViewModel.fetchPersonalInfo(userId),
+      profileViewModel.fetchProfileCompletion(userId),
+    ]);
 
-      if (profileViewModel.profileCompletionData?["userSituation"] == true) {
-        profileViewModel.fetchUserSituationAndCompetences(userManager.userId!);
-      }
-    });
-
+    if (profileViewModel.profileCompletionData?["userSituation"] == true) {
+      await profileViewModel.fetchUserSituationAndCompetences(userId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawerEnableOpenDragGesture: false,
       key: _scaffoldKey,
+      drawerEnableOpenDragGesture: false,
       appBar: _buildAppBar(),
-      backgroundColor: const Color(0xFFffffff),
-      body: _buildBody(),
+      backgroundColor: Colors.white,
+      body: FutureBuilder<void>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Erreur de chargement des données'));
+          }
+          return _buildBody();
+        },
+      ),
       drawer: LeftDrawer(),
       endDrawer: RightDrawer(),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      leading: new Container(),
-      actions: <Widget>[
-        new Container(),
-      ],
-      toolbarHeight: 320,
-      backgroundColor: Colors.transparent,
-      elevation: 0.0,
-      flexibleSpace: ClipPath(
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(320),
+      child: ClipPath(
         clipper: Customshape(),
-        child: Consumer3<FavoriteViewModel, ProfileViewModel,OffreViewModel>(
-          builder: (context, favoriteViewModel, profileViewModel,offViewModel, child) {
-            if (favoriteViewModel.isLoading || profileViewModel.isLoading || offViewModel.isLoading) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+        child: Consumer3<FavoriteViewModel, ProfileViewModel, OffreViewModel>(
+          builder: (context, favoriteViewModel, profileViewModel, offViewModel, child) {
             return Container(
               height: 400,
-              width: MediaQuery.of(context).size.width,
+              width: double.infinity,
               color: appColorOpacity,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 40),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircularIconButton(
-                          onPressed: () {
-                            _scaffoldKey.currentState!.openDrawer();
-                          },
-                          iconPath: Icons.menu_rounded,
-                          iconColor: strokeColor,
-                          iconSize: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 40),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircularIconButton(
+                        onPressed: () => _scaffoldKey.currentState!.openDrawer(),
+                        iconPath: Icons.menu_rounded,
+                        iconColor: strokeColor,
+                        iconSize: 24,
+                      ),
+                      CircularPercentIndicator(
+                        radius: 60.0,
+                        lineWidth: 12.0,
+                        animation: true,
+                        backgroundColor: tenPercentBlack,
+                        percent: (profileViewModel.profileCompletionData?['total'] ?? 0) / 100,
+                        center: Text(
+                          "${profileViewModel.profileCompletionData?['total'] ?? 0}%",
+                          style: const TextStyle(fontFamily: "semi-bold", fontSize: 18),
                         ),
-                        CircularPercentIndicator(
-                          radius: 60.0,
-                          lineWidth: 12.0,
-                          animation: true,
-                          backgroundColor: tenPercentBlack,
-                          percent:
-                          profileViewModel.profileCompletionData?['total'] != null ?
-                          (profileViewModel.profileCompletionData?['total'] /
-                                      100):
-                                  0.0,
-                          center: Text(
-                            "${profileViewModel.profileCompletionData?['total'] ?? 0}%",
-                            style: TextStyle(
-                                fontFamily: "semi-bold", fontSize: 18),
-                          ),
-                          progressColor: appColor,
-                          circularStrokeCap: CircularStrokeCap.round,
+                        progressColor: appColor,
+                        circularStrokeCap: CircularStrokeCap.round,
+                      ),
+                      CircularIconButton(
+                        onPressed: () => _scaffoldKey.currentState!.openEndDrawer(),
+                        iconPath: Icons.settings,
+                        iconColor: strokeColor,
+                        iconSize: 24,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    profileViewModel.personalInfo?.prenom?.isNotEmpty == true
+                        ? "Bonjour ${profileViewModel.personalInfo!.prenom}"
+                        : "Mon profil",
+                    style: const TextStyle(fontSize: 18.0, fontFamily: "semi-bold"),
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularIconButton(
+                        badgeValue: "${offViewModel.appliedOffers.length}",
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const OffersCandidatureScreen()),
                         ),
-                        CircularIconButton(
-                          onPressed: () {
-                            _scaffoldKey.currentState!.openEndDrawer();
-                          },
-                          iconPath: Icons.settings,
-                          iconColor: strokeColor,
-                          iconSize: 24,
+                        iconPath: CupertinoIcons.paperclip,
+                        iconColor: appColor,
+                        iconSize: 24,
+                      ),
+                      CircularIconButton(
+                        badgeValue: "${favoriteViewModel.savedOffers.length}",
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FavouriteOffersScreen()),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 15),
-                     Text(
-                       profileViewModel.personalInfo?.prenom != '' && profileViewModel.personalInfo?.prenom != null ? "Bonjour ${profileViewModel.personalInfo!.prenom}" :"Mon profil" ,
-                      style: TextStyle(fontSize: 18.0, fontFamily: "semi-bold"),
-                    ),
-                    SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularIconButton(
-                          badgeValue: "${offViewModel.appliedOffers.length}",
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => OffersCandidatureScreen()),
-                            );
-                          },
-                          iconPath: CupertinoIcons.paperclip,
-                          iconColor: appColor,
-                          iconSize: 24,
-                        ),
-                        CircularIconButton(
-                          badgeValue: "${favoriteViewModel.savedOffers.length}",
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => FavouriteOffersScreen()),
-                            );
-                          },
-                          iconPath: CupertinoIcons.heart,
-                          iconColor: appColor,
-                          iconSize: 24,
-                        ),
-                      ],
-                    )
-                  ],
-                ),
+                        iconPath: CupertinoIcons.heart,
+                        iconColor: appColor,
+                        iconSize: 24,
+                      ),
+                    ],
+                  )
+                ],
               ),
             );
           },
@@ -185,103 +167,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildBody() {
     return Consumer<ProfileViewModel>(
       builder: (context, profileViewModel, child) {
-        if (profileViewModel.isLoading) {
-          return Center(child: CircularProgressIndicator());
-        } else if (profileViewModel.isError) {
-          return Center(child: CircularProgressIndicator());
-        } else {
-          final data = profileViewModel.profileCompletionData;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(
-              children: [
-                _buildListTile(
-                  title: menuItems[0].title,
-                  isComplete: data?['userRecherche'] ?? false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => RechercheScreen()),
-                    );
-                  },
-                ),
-                _buildListTile(
-                  title: menuItems[1].title,
-                  isComplete: data?['userSituation'] ?? false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SituationScreen()),
-                    ).then((val) {
-                      if (val == true) {
-                        _refreshProfilCompletion();
-                      }
-                    });
-                  },
-                ),
-                _buildListTile(
-                  title: menuItems[2].title,
-                  isComplete: data?['userCv'] ?? false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CvScreen()),
-                    ).then((val) {
-                      if (val == true) {
-                        _refreshProfilCompletion();
-                      }
-                    });
-                  },
-                ),
-                _buildListTile(
-                  title: menuItems[3].title,
-                  isComplete: data?['userInfo'] ?? false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => PersonalInfoScreen()),
-                    ).then((val) {
-                      if (val == true) {
-                        _refreshProfilCompletion();
-                      }
-                    });
-                  },
-                ),
-              ],
-            ),
-          );
-        }
+        final data = profileViewModel.profileCompletionData ?? {};
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: Column(
+            children: [
+              _buildListTile(
+                title: menuItems[0].title,
+                isComplete: data['userRecherche'] ?? false,
+                onTap: () => _navigateTo(const RechercheScreen()),
+              ),
+              _buildListTile(
+                title: menuItems[1].title,
+                isComplete: data['userSituation'] ?? false,
+                onTap: () => _navigateTo(const SituationScreen(), refreshOnReturn: true),
+              ),
+              _buildListTile(
+                title: menuItems[2].title,
+                isComplete: data['userCv'] ?? false,
+                onTap: () => _navigateTo(const CvScreen(), refreshOnReturn: true),
+              ),
+              _buildListTile(
+                title: menuItems[3].title,
+                isComplete: data['userInfo'] ?? false,
+                onTap: () => _navigateTo(const PersonalInfoScreen(), refreshOnReturn: true),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
 
-  Future<void> _refreshProfilCompletion() async {
-    print('Refreshing profile completion');
+  void _navigateTo(Widget page, {bool refreshOnReturn = false}) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => page)).then((val) {
+      if (refreshOnReturn && val == true) {
+        _refreshProfileCompletion();
+      }
+    });
+  }
+
+  Future<void> _refreshProfileCompletion() async {
     final viewModel = Provider.of<ProfileViewModel>(context, listen: false);
-    await viewModel.fetchProfileCompletion(userManager.userId!);
-    print('Finished refreshing profile completion');
+    await viewModel.fetchProfileCompletion(UserManager.instance.userId!);
   }
 
   Widget _buildListTile({
     required String title,
     required bool isComplete,
-    required Function() onTap,
+    required VoidCallback onTap,
   }) {
     return ListTile(
       title: Text(title),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.circle,
-            color: isComplete ? Colors.green : Colors.red,
-            size: 10,
-          ),
-          SizedBox(width: 10),
-          Icon(Icons.chevron_right_rounded),
+          Icon(Icons.circle, color: isComplete ? Colors.green : Colors.red, size: 10),
+          const SizedBox(width: 10),
+          const Icon(Icons.chevron_right_rounded),
         ],
       ),
       onTap: onTap,

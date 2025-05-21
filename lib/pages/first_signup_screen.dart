@@ -110,6 +110,21 @@ class _FirstSignupScreenState extends State<FirstSignupScreen> {
       return;
     }
 
+    if (_validateFrenchPhoneNumber(telephoneController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Numéro invalide (format: +33X ou 0X)")),
+      );
+      return;
+    }
+
+    if (_validatePostalCode(postalController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Le code postal doit contenir 5 chiffres.")),
+      );
+      return;
+    }
+
+
     Map<String, dynamic> data = {
       'login': loginController.text,
       'email': emailController.text,
@@ -484,5 +499,18 @@ class _FirstSignupScreenState extends State<FirstSignupScreen> {
         ),
       ),
     );
+  }
+  bool _validateFrenchPhoneNumber(String? value) {
+    if (value == null || !RegExp(r'^(\+33[0-9]{9}|0[0-9]{9})$').hasMatch(value)) {
+      return true; //"Numéro invalide (format: +33X ou 0X)"
+    }
+    return false;
+  }
+
+  bool _validatePostalCode(String? value) {
+    if (value == null || !RegExp(r'^\d{5}$').hasMatch(value)) {
+      return true; //"Le code postal doit contenir 5 chiffres.";
+    }
+    return false;
   }
 }

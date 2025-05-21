@@ -166,7 +166,7 @@ class OffreCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.network(companyLogoPath, height: 60.0, alignment: Alignment.centerLeft),
+                Image.network(companyLogoPath, width:100 , alignment: Alignment.centerLeft),
                 CircularIconButton(
                   backgroundColor: Colors.white,
                   iconSize: 18,

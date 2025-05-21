@@ -1,6 +1,7 @@
 import 'package:direct_emploi/helper/de_back_button.dart';
 import 'package:direct_emploi/pages/single_offer_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/user_manager.dart';
 import '../viewmodels/favorite_view_model.dart';
@@ -185,7 +186,7 @@ class _OffreByEntrepriseScreenState extends State<OffreByEntrepriseScreen> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: "${viewModel.total} ",
+                                    text: "${NumberFormat("#,###", "fr_FR").format(viewModel.total)} ",
                                     style: TextStyle(fontSize: 16, fontFamily: "semi-bold", color: textColor),
                                   ),
                                   TextSpan(

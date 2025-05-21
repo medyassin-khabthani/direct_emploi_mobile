@@ -181,46 +181,46 @@ class _RechercheScreenState extends State<RechercheScreen> {
                       Text("Recommandation des listes d'emploi",
                           style: TextStyle(fontSize: 14, color: textColor, fontFamily: 'semi-bold')),
                       Divider(),
-                      Opacity(
-                        opacity: profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null ? 0.6:1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RadioListTile<String>(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text('Adapté à mon CV',
-                                  style: TextStyle(fontFamily: "regular", fontSize: 14)),
-                              value: 'cv',
-                              groupValue: sortOption,
-                              onChanged: (String? value) {
-                                if(profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null){
-                                  return;
-                                }else{
-                                  _pickFileCv();
-                                }
-                              },
-                            ),
-                            cvFileName != null ? Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text("Fichier: ",style: TextStyle(fontSize: 12,fontFamily: 'medium'),),
-                                  Text(cvFileName!,style: TextStyle(fontSize: 12,fontFamily: 'regular'))
-                              ],),
-                            ) : SizedBox(),
-                            if (profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                child: Text(
-                                  "Vous devez deposer au moins un cv.",
-                                  style: TextStyle(fontSize: 12,fontFamily:'regular'),
-                                ),
-                              ),
-                  
-                          ],
-                        ),
-                      ),
+                      // Opacity(
+                      //   opacity: profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null ? 0.6:1,
+                      //   child: Column(
+                      //     crossAxisAlignment: CrossAxisAlignment.start,
+                      //     children: [
+                      //       RadioListTile<String>(
+                      //         contentPadding: EdgeInsets.zero,
+                      //         title: const Text('Adapté à mon CV',
+                      //             style: TextStyle(fontFamily: "regular", fontSize: 14)),
+                      //         value: 'cv',
+                      //         groupValue: sortOption,
+                      //         onChanged: (String? value) {
+                      //           if(profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null){
+                      //             return;
+                      //           }else{
+                      //             _pickFileCv();
+                      //           }
+                      //         },
+                      //       ),
+                      //       cvFileName != null ? Padding(
+                      //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      //         child: Row(
+                      //           mainAxisAlignment: MainAxisAlignment.start,
+                      //           children: [
+                      //             Text("Fichier: ",style: TextStyle(fontSize: 12,fontFamily: 'medium'),),
+                      //             Text(cvFileName!,style: TextStyle(fontSize: 12,fontFamily: 'regular'))
+                      //         ],),
+                      //       ) : SizedBox(),
+                      //       if (profileViewModel.userCvs!.isEmpty || profileViewModel.userCvs == null)
+                      //         Padding(
+                      //           padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      //           child: Text(
+                      //             "Vous devez deposer au moins un cv.",
+                      //             style: TextStyle(fontSize: 12,fontFamily:'regular'),
+                      //           ),
+                      //         ),
+                      //
+                      //     ],
+                      //   ),
+                      // ),
                       Opacity(
                         opacity: profileViewModel.profileCompletionData?["userSituation"] == false ? 0.6 : 1,
                         child: Column(
