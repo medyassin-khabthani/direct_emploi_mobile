@@ -480,10 +480,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
                           width: double.infinity,
                           child: DottedBorder(
-                            dashPattern:const <double>[12, 6],
-                            borderType: BorderType.RRect,
-                            color: appColor,
-                            radius: Radius.circular(25),
+                            options: RectDottedBorderOptions(
+                              dashPattern:const <double>[12, 6],
+
+                            ),
+                            // borderType: BorderType.RRect,
+                            // color: appColor,
+                            // radius: Radius.circular(25),
                             child: Padding(
                               padding: const EdgeInsets.all(15.0),
                               child: Center(
@@ -1035,7 +1038,7 @@ class _SignupScreenState extends State<SignupScreen> {
           Center(
             child: DotsIndicator(
               dotsCount: 3,
-              position: currentPage,
+              position: currentPage.toDouble(),
               decorator: DotsDecorator(
                 size: const Size.square(8.0),
                 activeSize: const Size(28.0, 8.0),

@@ -117,7 +117,7 @@ class _FirstOnBoardScreenState extends State<OnBoardScreen> {
         Container(
           child: DotsIndicator(
             dotsCount: contents.length,
-            position: currentIndex,
+            position: currentIndex.toDouble(),
             decorator: DotsDecorator(
               size: const Size.square(8.0),
               activeSize: const Size(28.0, 8.0),

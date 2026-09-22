@@ -352,10 +352,13 @@ class _FirstSignupScreenState extends State<FirstSignupScreen> {
                 Container(
                   width: double.infinity,
                   child: DottedBorder(
-                    dashPattern: const <double>[12, 6],
-                    borderType: BorderType.RRect,
-                    color: appColor,
-                    radius: Radius.circular(25),
+                    options: RectDottedBorderOptions(
+                      dashPattern:const <double>[12, 6],
+                    ),
+                    // dashPattern: const <double>[12, 6],
+                    // borderType: BorderType.RRect,
+                    // color: appColor,
+                    // radius: Radius.circular(25),
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Center(

@@ -114,7 +114,7 @@ class _WorkSearchScreenState extends State<WorkSearchScreen> {
         Center(
           child: DotsIndicator(
             dotsCount: 4,
-            position: currentPage,
+            position: currentPage.toDouble(),
             decorator: DotsDecorator(
               size: const Size.square(8.0),
               activeSize: const Size(28.0, 8.0),
